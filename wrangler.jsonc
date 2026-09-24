@@ -1,0 +1,14 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "portfolio-api",
+	"main": "src/index.js",
+	"compatibility_date": "2026-09-24",
+	"d1_databases": [
+		{
+			"binding": "portfolio_messages",
+			"database_name": "portfolio-messages",
+			"database_id": "4463306f-46cd-477f-98b8-e03965232d0d",
+			"remote": true
+		}
+	]
+}
