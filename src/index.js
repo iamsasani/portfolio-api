@@ -24,7 +24,7 @@ const getCorsHeaders = (request) => {
 	const origin = request.headers.get('Origin');
 
 	const headers = {
-		'Access-Control-Allow-Methods': 'GET, POST, PATCH, DELETE, OPTIONS',
+		'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
 		'Access-Control-Allow-Headers': 'Content-Type',
 		'Access-Control-Allow-Credentials': 'true',
 	};
