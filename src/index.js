@@ -640,6 +640,252 @@ export default {
 			}
 		}
 		// --------------------------------
+		// GET /api/profile
+		// --------------------------------
+
+		if (request.method === 'GET' && url.pathname === '/api/profile') {
+			try {
+				const result = await env.portfolio_messages
+					.prepare(
+						`
+        SELECT
+          id,
+          name,
+          title,
+          bio,
+          email,
+          github_url,
+          telegram_url,
+          portfolio_url,
+          education,
+          skills_json,
+          updated_at
+        FROM profile
+        WHERE id = 1
+        `,
+					)
+					.first();
+
+				if (!result) {
+					return jsonResponse(
+						request,
+						{
+							success: false,
+							message: 'Profile not found.',
+						},
+						404,
+					);
+				}
+
+				let skills = [];
+
+				try {
+					skills = JSON.parse(result.skills_json || '[]');
+				} catch {
+					skills = [];
+				}
+
+				return jsonResponse(request, {
+					success: true,
+					profile: {
+						id: result.id,
+						name: result.name,
+						title: result.title,
+						bio: result.bio,
+						email: result.email,
+						github_url: result.github_url,
+						telegram_url: result.telegram_url,
+						portfolio_url: result.portfolio_url,
+						education: result.education,
+						skills,
+						updated_at: result.updated_at,
+					},
+				});
+			} catch (error) {
+				console.error(error);
+
+				return jsonResponse(
+					request,
+					{
+						success: false,
+						message: 'Something went wrong.',
+					},
+					500,
+				);
+			}
+		}
+
+		// --------------------------------
+		// GET /api/admin/profile
+		// --------------------------------
+
+		if (request.method === 'GET' && url.pathname === '/api/admin/profile') {
+			try {
+				const session = await getSession(request, env);
+
+				if (!session) {
+					return jsonResponse(
+						request,
+						{
+							success: false,
+							message: 'Unauthorized.',
+						},
+						401,
+					);
+				}
+
+				const result = await env.portfolio_messages
+					.prepare(
+						`
+        SELECT
+          id,
+          name,
+          title,
+          bio,
+          email,
+          github_url,
+          telegram_url,
+          portfolio_url,
+          education,
+          skills_json,
+          updated_at
+        FROM profile
+        WHERE id = 1
+        `,
+					)
+					.first();
+
+				if (!result) {
+					return jsonResponse(
+						request,
+						{
+							success: false,
+							message: 'Profile not found.',
+						},
+						404,
+					);
+				}
+
+				let skills = [];
+
+				try {
+					skills = JSON.parse(result.skills_json || '[]');
+				} catch {
+					skills = [];
+				}
+
+				return jsonResponse(request, {
+					success: true,
+					profile: {
+						id: result.id,
+						name: result.name,
+						title: result.title,
+						bio: result.bio,
+						email: result.email,
+						github_url: result.github_url,
+						telegram_url: result.telegram_url,
+						portfolio_url: result.portfolio_url,
+						education: result.education,
+						skills,
+						updated_at: result.updated_at,
+					},
+				});
+			} catch (error) {
+				console.error(error);
+
+				return jsonResponse(
+					request,
+					{
+						success: false,
+						message: 'Something went wrong.',
+					},
+					500,
+				);
+			}
+		}
+
+		// --------------------------------
+		// PUT /api/admin/profile
+		// --------------------------------
+
+		if (request.method === 'PUT' && url.pathname === '/api/admin/profile') {
+			try {
+				const session = await getSession(request, env);
+
+				if (!session) {
+					return jsonResponse(
+						request,
+						{
+							success: false,
+							message: 'Unauthorized.',
+						},
+						401,
+					);
+				}
+
+				const body = await request.json();
+
+				const name = body.name?.trim();
+				const title = body.title?.trim();
+				const bio = body.bio?.trim() || '';
+				const email = body.email?.trim() || '';
+				const githubUrl = body.github_url?.trim() || '';
+				const telegramUrl = body.telegram_url?.trim() || '';
+				const portfolioUrl = body.portfolio_url?.trim() || '';
+				const education = body.education?.trim() || '';
+
+				const skills = Array.isArray(body.skills) ? body.skills.map((skill) => String(skill).trim()).filter(Boolean) : [];
+
+				if (!name || !title) {
+					return jsonResponse(
+						request,
+						{
+							success: false,
+							message: 'Name and title are required.',
+						},
+						400,
+					);
+				}
+
+				await env.portfolio_messages
+					.prepare(
+						`
+        UPDATE profile
+        SET
+          name = ?,
+          title = ?,
+          bio = ?,
+          email = ?,
+          github_url = ?,
+          telegram_url = ?,
+          portfolio_url = ?,
+          education = ?,
+          skills_json = ?,
+          updated_at = CURRENT_TIMESTAMP
+        WHERE id = 1
+        `,
+					)
+					.bind(name, title, bio, email, githubUrl, telegramUrl, portfolioUrl, education, JSON.stringify(skills))
+					.run();
+
+				return jsonResponse(request, {
+					success: true,
+					message: 'Profile updated successfully.',
+				});
+			} catch (error) {
+				console.error(error);
+
+				return jsonResponse(
+					request,
+					{
+						success: false,
+						message: 'Something went wrong.',
+					},
+					500,
+				);
+			}
+		}
+		// --------------------------------
 		// GET /api/admin/messages
 		// --------------------------------
 		if (request.method === 'GET' && url.pathname === '/api/admin/messages') {
