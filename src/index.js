@@ -18,7 +18,7 @@ const BOOKING_TIMES = [
 	'17:00',
 ];
 
-const ALLOWED_ORIGINS = ['http://localhost:5173', 'https://personal-portfolio.workwithsasan.workers.dev'];
+const ALLOWED_ORIGINS = ['http://localhost:3000', 'http://localhost:5173', 'https://personal-portfolio.workwithsasan.workers.dev'];
 
 const getCorsHeaders = (request) => {
 	const origin = request.headers.get('Origin');
@@ -267,7 +267,7 @@ export default {
 					.run();
 
 				// Set HttpOnly cookie
-				const cookie = [`admin_session=${token}`, 'HttpOnly', 'Secure', 'SameSite=Lax', 'Path=/', 'Max-Age=86400'].join('; ');
+				const cookie = [`admin_session=${token}`, 'HttpOnly', 'Secure', 'SameSite=None', 'Path=/', 'Max-Age=86400'].join('; ');
 
 				return jsonResponse(
 					request,
@@ -553,6 +553,93 @@ export default {
 			}
 		}
 		// --------------------------------
+		// PATCH /api/admin/meetings/:id/status
+		// --------------------------------
+
+		if (request.method === 'PATCH' && url.pathname.startsWith('/api/admin/meetings/')) {
+			try {
+				const session = await getSession(request, env);
+
+				if (!session) {
+					return jsonResponse(
+						request,
+						{
+							success: false,
+							message: 'Unauthorized.',
+						},
+						401,
+					);
+				}
+
+				const meetingId = Number(url.pathname.split('/')[4]);
+
+				if (!Number.isInteger(meetingId)) {
+					return jsonResponse(
+						request,
+						{
+							success: false,
+							message: 'Invalid meeting ID.',
+						},
+						400,
+					);
+				}
+
+				const body = await request.json();
+				const status = body.status?.trim();
+
+				const allowedStatuses = ['scheduled', 'cancelled', 'completed'];
+
+				if (!allowedStatuses.includes(status)) {
+					return jsonResponse(
+						request,
+						{
+							success: false,
+							message: 'Invalid status.',
+						},
+						400,
+					);
+				}
+
+				const result = await env.portfolio_messages
+					.prepare(
+						`
+        UPDATE meetings
+        SET status = ?
+        WHERE id = ?
+        `,
+					)
+					.bind(status, meetingId)
+					.run();
+
+				if (result.meta.changes === 0) {
+					return jsonResponse(
+						request,
+						{
+							success: false,
+							message: 'Meeting not found.',
+						},
+						404,
+					);
+				}
+
+				return jsonResponse(request, {
+					success: true,
+					message: 'Meeting status updated successfully.',
+				});
+			} catch (error) {
+				console.error(error);
+
+				return jsonResponse(
+					request,
+					{
+						success: false,
+						message: 'Something went wrong.',
+					},
+					500,
+				);
+			}
+		}
+		// --------------------------------
 		// GET /api/admin/messages
 		// --------------------------------
 		if (request.method === 'GET' && url.pathname === '/api/admin/messages') {
@@ -773,7 +860,7 @@ export default {
 					}
 				}
 
-				const cookie = ['admin_session=', 'HttpOnly', 'Secure', 'SameSite=Lax', 'Path=/', 'Max-Age=0'].join('; ');
+				const cookie = ['admin_session=', 'HttpOnly', 'Secure', 'SameSite=None', 'Path=/', 'Max-Age=0'].join('; ');
 
 				return jsonResponse(
 					request,
