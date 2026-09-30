@@ -18,7 +18,12 @@ const BOOKING_TIMES = [
 	'17:00',
 ];
 
-const ALLOWED_ORIGINS = ['http://localhost:3000', 'http://localhost:5173', 'https://personal-portfolio.workwithsasan.workers.dev'];
+const ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://personal-portfolio.workwithsasan.workers.dev',
+    'https://portfolio-admin.workwithsasan.workers.dev',
+];
 
 const getCorsHeaders = (request) => {
 	const origin = request.headers.get('Origin');
@@ -31,6 +36,7 @@ const getCorsHeaders = (request) => {
 
 	if (origin && ALLOWED_ORIGINS.includes(origin)) {
 		headers['Access-Control-Allow-Origin'] = origin;
+		headers['Vary'] = 'Origin';
 	}
 
 	return headers;
